@@ -1,0 +1,70 @@
+CREATE OR REPLACE FUNCTION public.get_companies_byfilters(
+p_category text DEFAULT NULL::text, 
+p_company_size text DEFAULT NULL::text, 
+p_implementation_time text DEFAULT NULL::text, 
+p_company_values text DEFAULT NULL::text, 
+p_employees text DEFAULT NULL::text, 
+p_keywords text DEFAULT NULL::text, 
+p_comp_ids text DEFAULT NULL::text, 
+p_limit integer DEFAULT 10, 
+p_offset integer DEFAULT 0, 
+p_sortname character varying DEFAULT 'createdAt'::character varying, 
+p_sortorder character varying DEFAULT 'desc'::character varying,
+p_userId integer DEFAULT 0)
+ RETURNS TABLE(id integer, name character varying, business_start_year integer, aoe character varying, phone character varying, category jsonb, 
+ email character varying, ncic character varying, address jsonb, answers jsonb, media jsonb, createdat timestamp with time zone, 
+ updatedat timestamp with time zone, company_type_id integer, orderby integer, ra_companyid integer, "5 Star" text, "4 Star" text, "3 Star" text, "2 Star" text, 
+ "1 Star" text, average numeric, review_cnt bigint, re_companyid integer, saved_to_mybensights integer,
+ rows_count bigint)
+ LANGUAGE plpgsql
+AS $function$
+--declare 
+---- variable declaration
+begin
+-- body
+return query
+select *, count(1) over() from ( 
+select c2.*,rating.*,review.*,case when count(f2.id) > 0 then 1 else 0 end saved_to_mybensights --, count(*) over() as rows_count
+from companies c2 
+join(
+select c.id,
+trim((replace(jsonb_array_elements(c.category)::text,'"',''))) as "category",
+trim((replace(jsonb_array_elements(c.answers->'Keywords'->'options')::text,'"','')))  as "keywords"  ,
+trim((replace(jsonb_array_elements(c.answers->'Employees'->'options')::text,'"','')))  as "employees" , 
+trim((replace(jsonb_array_elements(c.answers->'Company_Size'->'options')::text,'"','')))  as "company_size",  
+trim((replace(jsonb_array_elements(c.answers->'Implementation_Time'->'options')::text,'"','')))  as "implementation_time",  
+trim((replace(jsonb_array_elements(c.answers->'Company_Values'->'options')::text,'"','')))  as "company_values"  
+from companies c) a on a.id = c2.id
+left join (select 
+"companyId" as ra_companyId,
+round(100*(sum(case when rating = 5 then 1 else 0 end)/count(*)::numeric),2)::text || '%' "5 Star" ,
+round(100*(sum(case when rating = 4 then 1 else 0 end)/count(*)::numeric),2)::text || '%' "4 Star",
+round(100*(sum(case when rating = 3 then 1 else 0 end)/count(*)::numeric),2)::text || '%' "3 Star",
+round(100*(sum(case when rating = 2 then 1 else 0 end)/count(*)::numeric),2)::text || '%' "2 Star",
+round(100*(sum(case when rating = 1 then 1 else 0 end)/count(*)::numeric),2)::text || '%' "1 Star",
+round(AVG(rating),2) average
+from ratings r
+group by ra_companyId) rating on rating.ra_companyId = c2.id
+left join (select count(1) review_cnt, "companyId" as re_companyId from reviews group by re_companyId) review on review.re_companyId = c2.id
+left join filters f2 on f2."companyId" = c2.id and f2."userId" = p_userId
+where 
+(p_comp_ids is null or c2.id in (select unnest(string_to_array(p_comp_ids,','))::int))
+and (p_category is null or a.category::text in (select unnest(string_to_array(p_category,','))))
+and (p_company_size is null or a.company_size::text in (select unnest(string_to_array(p_company_size,','))))
+and (p_implementation_time is null or a.implementation_time::text in (select unnest(string_to_array(p_implementation_time,','))))
+and (p_company_values is null or a.company_values::text in (select unnest(string_to_array(p_company_values, ','))))
+and (p_employees is null or a.employees::text in (select unnest(string_to_array(p_employees,','))))
+and (p_keywords is null or a.keywords::text in (select unnest(string_to_array(p_keywords,','))))
+group by c2.id, c2."name" , c2.business_start_year,c2.aoe, c2.phone, c2.category, c2.email, c2.ncic,
+c2.address, c2.answers, c2.media, c2."createdAt" , c2."updatedAt" ,c2.company_type_id ,rating.ra_companyId,rating."5 Star",rating."4 Star",
+rating."3 Star",rating."2 Star",rating."1 Star",rating.average, review.review_cnt, review.re_companyId--, rows_count
+) a
+order by 
+(case when p_sortname = 'name' and p_sortorder = 'asc' then a."name" end) asc,
+(case when p_sortname = 'name' and p_sortorder = 'desc' then a."name" end) desc,
+(case when p_sortname = 'createdAt' and p_sortorder = 'asc' then a."createdAt" end) asc,
+(case when p_sortname = 'createdAt' and p_sortorder = 'desc' then a."createdAt" end) desc
+limit p_limit
+offset p_offset;
+end; $function$
+;
