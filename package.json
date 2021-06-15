@@ -1,0 +1,57 @@
+{
+  "name": "nodejs-express-mysql",
+  "version": "1.0.0",
+  "description": "Node.js Restful CRUD API with Node.js, Express and MySQL",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mysql",
+    "restapi"
+  ],
+  "author": "bezkoder",
+  "license": "ISC",
+  "dependencies": {
+    "amazon-cognito-identity-js": "^4.5.13",
+    "async": "^3.2.0",
+    "aws-sdk": "^2.820.0",
+    "body-parser": "^1.19.0",
+    "bwip-js": "^2.0.8",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "jsonwebtoken": "^8.5.1",
+    "jwk-to-pem": "^2.0.4",
+    "moment": "^2.27.0",
+    "multer": "^1.4.2",
+    "multer-s3": "^2.9.0",
+    "mysql2": "^2.1.0",
+    "node-fetch": "^2.6.1",
+    "nodemailer": "^6.5.0",
+    "nodemon": "^2.0.7",
+    "parse-address": "^1.1.2",
+    "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
+    "pg-promise": "^10.9.2",
+    "randomatic": "^3.1.1",
+    "read-excel-file": "^4.0.7",
+    "request": "^2.88.2",
+    "sequelize": "^6.2.3",
+    "sequelize-automate": "^1.2.2",
+    "sql-bricks": "^2.0.5",
+    "sql-bricks-postgres": "^0.5.0",
+    "stripe": "^8.138.0",
+    "uuid": "^8.3.2",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5",
+    "xlsx": "^0.16.8"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.2.0"
+  }
+}
